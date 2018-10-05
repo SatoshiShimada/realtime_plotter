@@ -1,0 +1,116 @@
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Real-time Plotter</title>
+</head>
+<body>
+
+<canvas id="myChart"></canvas>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@1.7.0/dist/chartjs-plugin-streaming.min.js"></script>
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+var chart = new Chart(ctx, {
+	type: 'line',
+	data: {
+		datasets: [{
+			data: [],
+			label: 'x',
+			borderColor: 'rgb(255, 99, 132)',
+			backgroundColor: 'rgba(255, 99, 132, 0.5)',
+			fill: false,
+			lineTension: 0
+		}, {
+			data: [],
+			label: 'y',
+			borderColor: 'rgb(54, 162, 235)',
+			backgroundColor: 'rgba(54, 162, 235, 0.5)',
+			fill: false,
+			lineTension: 0
+		}, {
+			data: [],
+			label: 'z',
+			borderColor: 'rgb(54, 235, 162)',
+			backgroundColor: 'rgba(54, 235, 162, 0.5)',
+			fill: false,
+			lineTension: 0
+		}]
+	},
+	options: {
+		title: {
+			text: 'Sensor Data',
+			display: true
+		},
+		scales: {
+			xAxes: [{
+				type: 'realtime'
+			}],
+			yAxes: [{
+				type: 'linear',
+				position: 'left',
+				ticks: {
+					max: 2.0,
+					min: -2.0,
+					stepSize: 0.2
+				},
+			}],
+		},
+		animation: {
+			duration: 0
+		},
+		hover: {
+			animationDuration: 0
+		},
+		responsiveAnimationDuration: 0,
+		plugins: {
+			streaming: {
+				duration: 20000,
+				refresh: 100,
+				delay: 10,
+				frameRate: 30,
+				pause: false,
+				onRefresh: function(chart) {
+					var data = get_data();
+					chart.data.datasets[0].data.push({
+						x: Date.now(),
+						y: data[0]
+					});
+					chart.data.datasets[1].data.push({
+						x: Date.now(),
+						y: data[1]
+					});
+					chart.data.datasets[2].data.push({
+						x: Date.now(),
+						y: data[2]
+					});
+				}
+			}
+		}
+	}
+});
+let v1 = 0;
+let v2 = 0;
+let v3 = 0;
+function get_data() {
+	$.ajax({
+		url: "./get_data.php",
+		type: "GET",
+	})
+	.done(function(data) {
+		d = data.split(',');
+		v1 = d[0];
+		v2 = d[1];
+		v3 = d[2];
+	})
+	.fail(function() {
+		v1 = 0;
+		v2 = 0;
+		v3 = 0;
+	});
+	return [v1, v2, v3];
+}
+</script>
+</body>
+</html>
